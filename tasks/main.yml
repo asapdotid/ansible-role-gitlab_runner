@@ -1,0 +1,34 @@
+---
+# tasks file for role-gitlab_runner
+
+- name: Install dependencies
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/prerequisites/install-dependencies.yml"
+
+- name: Install GitLab Runner
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/install/install-{{ ansible_facts['os_family'] | lower }}.yml"
+
+- name: Configure GitLab Runner
+  when:
+    - gitlab_runner_state != 'absent'
+  tags:
+    - runner_config
+  block:
+    - name: Register GitLab Runner
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/modify/setup-runners.yml"
+      tags: runner_setup_config
+
+    # - name: Check config file GitLab Runner
+    #   ansible.builtin.include_tasks: "{{ role_path }}/tasks/config/ensure-config.yml"
+    #   tags: runner_config_file
+
+    # - name: Global config options GitLab Runner
+    #   ansible.builtin.include_tasks: "{{ role_path }}/tasks/config/config-global.yml"
+    #   tags: runner_global_config
+
+    # - name: Session server config options GitLab Runner
+    #   ansible.builtin.include_tasks: "{{ role_path }}/tasks/config/config-session.yml"
+    #   tags: runner_session_config
+
+    # - name: Config GitLab Runner
+    #   ansible.builtin.include_tasks: "{{ role_path }}/tasks/config/config-runners.yml"
+    #   tags: runner_runners_config

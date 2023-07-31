@@ -1,0 +1,39 @@
+---
+- name: Get registration status
+  ansible.builtin.command:
+    cmd: "{{ gitlab_runner_service }} list"
+  register: gitlab_runner_get_registration_status
+  changed_when: no
+  tags: runner_runners_config
+
+- name: Create temporary file for {{ conf_name_prefix }}
+  ansible.builtin.tempfile:
+    state: file
+    path: "{{ temp_runner_config_dir.path }}"
+    prefix: "gitlab-runner.{{ runner_config_index }}."
+  register: temp_runner_config
+  check_mode: false
+  changed_when: false
+  tags: runner_runners_config
+
+- name: Isolate runner configuration for {{ conf_name_prefix }}
+  ansible.builtin.copy:
+    dest: "{{ temp_runner_config.path }}"
+    content: "{{ runner_config }}"
+    mode: '0644'
+  check_mode: false
+  changed_when: false
+  tags: runner_runners_config
+
+- name: Update runner configuration {{ conf_name_prefix }}
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/config/update-config-runner.yml"
+  vars:
+    runner_name_prefix: "{{ conf_name_prefix }} runner[{{ (gitlab_runner_index | int) + 1 }}/{{ gitlab_runner_runners | length }}]:"
+  when:
+    - ('name = "' + gitlab_runner.name + '"') in runner_config
+    - gitlab_runner.state | default('present') == 'present'
+  loop: "{{ gitlab_runner_runners }}"
+  loop_control:
+    index_var: gitlab_runner_index
+    loop_var: gitlab_runner
+  tags: runner_runners_config

@@ -1,0 +1,14 @@
+---
+- name: Set coordinator URL for {{ runn_name_prefix }}
+  ansible.builtin.lineinfile:
+    dest: "{{ temp_runner_config.path }}"
+    regexp: '^\s*url ='
+    line: '  url = {{ gitlab_runner.url | default(gitlab_runner_coordinator_url) | to_json }}'
+    state: present
+  check_mode: false
+  tags: runner_config
+
+# - name: Debug
+#   ansible.builtin.debug:
+#     var: gitlab_runner.url | default(gitlab_runner_coordinator_url) | to_json
+#   tags: runner_runners_config

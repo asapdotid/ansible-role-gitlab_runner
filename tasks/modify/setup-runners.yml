@@ -1,0 +1,34 @@
+---
+- name: List configured runners
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/modify/list-configured-runners.yml"
+  tags: runner_setup_config
+
+- name: Register GitLab Runner
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/modify/setup-register-runner.yml"
+  when:
+    - gitlab_runner.name is defined
+    - gitlab_runner.name | string | length > 0
+    - gitlab_runner.token is defined
+    - gitlab_runner.token | string | length > 0
+    - gitlab_runner.state is defined
+    - gitlab_runner.state == 'present'
+  loop: "{{ gitlab_runner_runners }}"
+  loop_control:
+    index_var: gitlab_runner_index
+    loop_var: gitlab_runner
+  tags: runner_setup_config
+
+- name: Unregister GitLab Runner
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/modify/setup-unregister-runner.yml"
+  when:
+    - gitlab_runner.name is defined
+    - gitlab_runner.name | string | length > 0
+    - gitlab_runner.token is defined
+    - gitlab_runner.token | string | length > 0
+    - gitlab_runner.state is defined
+    - gitlab_runner.state == 'absent'
+  loop: "{{ gitlab_runner_runners }}"
+  loop_control:
+    index_var: gitlab_runner_index
+    loop_var: gitlab_runner
+  tags: runner_setup_config

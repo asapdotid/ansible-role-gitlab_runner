@@ -1,0 +1,79 @@
+---
+# defaults file for role-gitlab_runner
+
+# Specify whether you want to install Gitlab Runner, upgrade to the latest version, or remove Gitlab Runner.
+# Can be used with `gitlab_runner_version` to fine tune control which version of Gitlab Runner is installed/used on each playbook execution.
+# Using 'install' will install the latest version (or 'gitlab_runner_version') of Gitlab Runner on a fresh install.
+# Using 'upgrade' will upgrade Gitlab Runner to the latest version (that matches your 'gitlab_runner_version') of Gitlab Runner on every playbook execution.
+# Using 'uninstall' will remove Gitlab Runner from your system.
+# Default is install.
+gitlab_runner_setup: install
+
+# The version of the GitLab runner to install.
+gitlab_runner_version: "16.1.0"
+
+# Start Gitlab Runner service.
+gitlab_runner_start: true
+
+# The global section runner config
+## Maximum number of global jobs to run concurrently and state: present/absent
+gitlab_runner_concurrent:
+  - "{{ ansible_processor_vcpus }}"
+  - present
+## Default value for log_format [runner/text/json] and state: present/absent
+gitlab_runner_log_format:
+  - runner
+  - present
+## Default value for log_level [debug/info/warn/error/fatal/panic] and state: present/absent
+gitlab_runner_log_level:
+  - warn
+  - present
+## The interval length, in seconds, between the runner checking for new jobs and state: present/absent
+gitlab_runner_check_interval:
+  - 0
+  - present
+## Enables tracking of all system level errors to Sentry. and state: present/absent
+gitlab_runner_sentry_dsn:
+  - ""
+  - absent
+## Defines an address (<host>:<port>) the Prometheus metrics HTTP server should listen on. and state: present/absent
+gitlab_runner_listen_address:
+  - ""
+  - absent
+## Number of seconds until the forceful shutdown operation times out and exits the process. and state: present/absent
+gitlab_runner_shutdown_timeout:
+  - 0
+  - present
+
+# The [session_server] section runner config
+## Listen on all available interfaces on port: 8093 and state: present/absent
+gitlab_runner_session_listen_address:
+  - "[::]:8093"
+  - absent
+## The URL to access the session server on host:port and state: present/absent
+gitlab_runner_session_advertise_address:
+  - "runner-host-name.tld:8093"
+  - absent
+## Number of seconds the session can stay active after the job completes. timeout and state: present/absent
+gitlab_runner_session_session_timeout:
+  - 1800
+  - present
+
+# The URL to register the runner to.
+gitlab_runner_coordinator_url: "https://gitlab.com/"
+
+# Controls diffs for assemle config file
+gitlab_runner_show_config_diff: false
+
+# A list of runners to register and configure
+gitlab_runner_runners:
+  # The identifier of the runner.
+  - name: "{{ gitlab_runner_name }}"
+    # GitLab coordinator URL
+    url: "{{ gitlab_runner_coordinator_url }}"
+    # GitLab registration token
+    token: "{{ gitlab_runner_registration_token }}"
+    # The executor used by the runner.
+    executor: "{{ gitlab_runner_executor }}"
+    # Runner config state: present | absent
+    state: absent

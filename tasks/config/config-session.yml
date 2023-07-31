@@ -1,0 +1,43 @@
+---
+- name: The [session_server] section runner config
+  when:
+    - runner_config_file.stat.exists | bool
+  notify:
+    - (Handler) Run Runner
+  tags: runner_session_config
+  block:
+    - name: Add listen_address to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^\s*listen_address ='
+        line: '  listen_address = "{{ gitlab_runner_session_listen_address[0] }}"'
+        state: "{{ gitlab_runner_session_listen_address[1] }}"
+        insertafter: '^\s*\[session_server\]'
+      when:
+        - gitlab_runner_session_listen_address is defined
+        - gitlab_runner_session_listen_address | length > 0
+      tags: runner_session_config
+
+    - name: Add advertise_address to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^\s*advertise_address ='
+        line: '  advertise_address = "{{ gitlab_runner_session_advertise_address[0] }}"'
+        state: "{{ gitlab_runner_session_advertise_address[1] }}"
+        insertafter: '\s*listen_address.*'
+      when:
+        - gitlab_runner_session_advertise_address is defined
+        - gitlab_runner_session_advertise_address | length > 0
+      tags: runner_session_config
+
+    - name: Add session_timeout to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^\s*session_timeout ='
+        line: '  session_timeout = {{ gitlab_runner_session_session_timeout[0] | int }}'
+        state: "{{ gitlab_runner_session_session_timeout[1] }}"
+        insertafter: '\s*advertise_address.*'
+      when:
+        - gitlab_runner_session_session_timeout is defined
+        - gitlab_runner_session_session_timeout | length > 0
+      tags: runner_session_config

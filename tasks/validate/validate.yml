@@ -1,0 +1,9 @@
+---
+
+- name: Test if gitlab_runner_name is set correctly
+  ansible.builtin.assert:
+    that:
+      - gitlab_runner_name is defined
+      - gitlab_runner_name is string
+      - gitlab_runner_name is not none
+    quiet: yes

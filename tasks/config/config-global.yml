@@ -1,0 +1,91 @@
+---
+- name: The global section runner config
+  when:
+    - runner_config_file.stat.exists | bool
+  notify:
+    - (Handler) Run Runner
+  tags: runner_global_config
+  block:
+    - name: Set concurrent option
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^(\s*)concurrent ='
+        line: '\1concurrent = {{ gitlab_runner_concurrent[0] | int }}'
+        state: "{{ gitlab_runner_concurrent[1] }}"
+        backrefs: true
+      when:
+        - gitlab_runner_concurrent is defined
+        - gitlab_runner_concurrent | length > 0
+      tags: runner_global_config
+
+    - name: Add log_level to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^log_level ='
+        line: 'log_level = "{{ gitlab_runner_log_level[0] }}"'
+        state: "{{ gitlab_runner_log_level[1] }}"
+        insertafter: '\s*concurrent.*'
+      when:
+        - gitlab_runner_log_level is defined
+        - gitlab_runner_log_level | length > 0
+      tags: runner_global_config
+
+    - name: Add log_format to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^log_format ='
+        line: 'log_format = "{{ gitlab_runner_log_format[0] }}"'
+        state: "{{ gitlab_runner_log_format[1] }}"
+        insertafter: '\s*log_level.*'
+      when:
+        - gitlab_runner_log_format is defined
+        - gitlab_runner_log_format | length > 0
+      tags: runner_global_config
+
+    - name: Add check_interval to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^check_interval ='
+        line: 'check_interval = {{ gitlab_runner_check_interval[0] | int }}'
+        state: "{{ gitlab_runner_check_interval[1] }}"
+        insertafter: '\s*log_format.*'
+      when:
+        - gitlab_runner_check_interval is defined
+        - gitlab_runner_check_interval | length > 0
+      tags: runner_global_config
+
+    - name: Add sentry_dsn to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^sentry_dsn ='
+        line: 'sentry_dsn = "{{ gitlab_runner_sentry_dsn[0] }}"'
+        state: "{{ gitlab_runner_sentry_dsn[1] }}"
+        insertafter: '\s*check_interval.*'
+      when:
+        - gitlab_runner_sentry_dsn is defined
+        - gitlab_runner_sentry_dsn | length > 0
+      tags: runner_global_config
+
+    - name: Add listen_address to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^listen_address ='
+        line: 'listen_address = "{{ gitlab_runner_listen_address[0] }}"'
+        state: "{{ gitlab_runner_listen_address[1] }}"
+        insertafter: '\s*sentry_dsn.*'
+      when:
+        - gitlab_runner_listen_address is defined
+        - gitlab_runner_listen_address | length > 0
+      tags: runner_global_config
+
+    - name: Add shutdown_timeout to config
+      ansible.builtin.lineinfile:
+        dest: "{{ gitlab_runner_config_file }}"
+        regexp: '^shutdown_timeout ='
+        line: 'shutdown_timeout = {{ gitlab_runner_shutdown_timeout[0] | int }}'
+        state: "{{ gitlab_runner_shutdown_timeout[1] }}"
+        insertafter: '\s*listen_address.*'
+      when:
+        - gitlab_runner_shutdown_timeout is defined
+        - gitlab_runner_shutdown_timeout | length > 0
+      tags: runner_global_config

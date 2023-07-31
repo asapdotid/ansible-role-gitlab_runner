@@ -1,0 +1,52 @@
+---
+- name: (Debian/Ubuntu) Get repository installation Gitlab Runner script
+  ansible.builtin.get_url:
+    url: "{{ gitlab_runner_script_url }}"
+    dest: /tmp/gitlab-runner-script.sh
+    mode: '0750'
+
+- name: (Debian/Ubuntu) Run repository installation Gitlab Runner script
+  ansible.builtin.command:
+    cmd: /tmp/gitlab-runner-script.sh
+    creates: "{{ gitlab_runner_repository_file }}"
+
+- name: (Debian/Ubuntu) Hold/Unhold GitLab Runner version
+  ansible.builtin.dpkg_selections:
+    name: "{{ gitlab_runner_service }}"
+    selection: "{{ (gitlab_runner_state == 'absent') | ternary('uninstall', 'install') }}"
+  changed_when: false
+
+- name: (Debian/Ubuntu) Install Gitlab Runner
+  ansible.builtin.apt:
+    name: "{{ gitlab_runner_package }}"
+    update_cache: true
+    state: "{{ gitlab_runner_state }}"
+  environment:
+    GITLAB_RUNNER_DISABLE_SKEL: "true"
+
+- name: (Debian/Ubuntu) Hold GitLab Runner version
+  ansible.builtin.dpkg_selections:
+    name: "{{ gitlab_runner_service }}"
+    selection: hold
+  changed_when: false
+  when: gitlab_runner_version is defined
+
+- name: (Debian) Remove ~/gitlab-runner/.bash_logout
+  ansible.builtin.file:
+    path: /home/gitlab-runner/.bash_logout
+    state: absent
+
+- name: Set systemd reload options
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/setup/setup-reload.yml"
+
+# - name: (Debian/Ubuntu) {{ (gitlab_runner_setup == 'uninstall') | ternary('Unpin', 'Pin') }} Gitlab Runner
+#   ansible.builtin.blockinfile:
+#     path: /etc/apt/preferences.d/pin-gitlab-runner.pref
+#     create: true
+#     block: |
+#       Explanation: Prefer GitLab provided packages over the Debian native ones
+#       Package: gitlab-runner
+#       Pin: origin packages.gitlab.com
+#       Pin-Priority: 1001
+#     mode: '0644'
+#     state: "{{ (gitlab_runner_setup == 'uninstall') | ternary('absent', 'present') }}"

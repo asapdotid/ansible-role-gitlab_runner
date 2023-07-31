@@ -1,0 +1,6 @@
+---
+- name: Ensure config.toml exists
+  ansible.builtin.stat:
+    path: "{{ gitlab_runner_config_file }}"
+  register: runner_config_file
+  tags: runner_config_file

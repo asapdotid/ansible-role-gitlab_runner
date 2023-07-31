@@ -1,0 +1,16 @@
+---
+- name: Setup runner command
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/modify/setup-register-command.yml"
+  tags: runner_setup_config
+
+- name: Register runner to GitLab
+  ansible.builtin.command:
+    cmd: >
+      {{ register_runner_cmd }}
+      --token '{{ gitlab_runner.token  }}'
+  register: runner_register_output
+  changed_when: runner_register_output.rc != 0
+  when:
+    - gitlab_runner.name not in registered_gitlab_runner_names
+  # no_log: true
+  tags: runner_setup_config

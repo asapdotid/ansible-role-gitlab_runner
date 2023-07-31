@@ -1,0 +1,65 @@
+---
+# vars file for role-gitlab_runner
+
+# Determine the current value of 'gitlab_runner_state'
+gitlab_runner_state_vals:
+  install: present
+  uninstall: absent
+  upgrade: latest
+
+gitlab_runner_default_setup: install
+gitlab_runner_state: "{{ gitlab_runner_state_vals[gitlab_runner_setup] | default(gitlab_runner_state_vals[gitlab_runner_default_setup]) }}"
+
+_gitlab_runner_package_type:
+  Debian: deb
+  RedHat: rpm
+
+gitlab_runner_package_type: "{{ _gitlab_runner_package_type[ansible_os_family] }}"
+
+gitlab_runner_script_url: "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.{{ gitlab_runner_package_type }}.sh"
+
+_gitlab_runner_repository_file:
+  Debian: /etc/apt/sources.list.d/runner_gitlab-runner.list
+  RedHat: /etc/yum.repos.d/runner_gitlab-runner.repo
+
+gitlab_runner_repository_file: "{{ _gitlab_runner_repository_file[ansible_os_family] }}"
+
+gitlab_runner_service: gitlab-runner
+
+_gitlab_runner_version_separator:
+  apt: "="
+  dnf: "-"
+  yum: "-"
+
+gitlab_runner_version_separator: "{{ _gitlab_runner_version_separator[ansible_pkg_mgr] }}"
+
+gitlab_runner_package: "gitlab-runner{{ gitlab_runner_version_separator }}{{ gitlab_runner_version }}"
+
+gitlab_runner_config_dir: "/etc/gitlab-runner"
+gitlab_runner_config_file: "/etc/gitlab-runner/config.toml"
+
+gitlab_runner_timeout_stop_seconds: 720
+
+# Gilab runner requirements packages
+_gitlab_runner_requirements:
+  Debian:
+    - curl
+    - debian-archive-keyring
+    - apt-transport-https
+    - git
+    - openssl
+  RedHat:
+    "7":
+      - curl
+      - yum-utils
+      - openssl
+    "8":
+      - curl
+      - yum-utils
+      - openssl
+    "9":
+      - curl-minimal
+      - yum-utils
+      - openssl
+
+gitlab_runner_requirements: "{{ _gitlab_runner_requirements[ansible_os_family][ansible_distribution_major_version] | default(_gitlab_runner_requirements[ansible_os_family]) }}"

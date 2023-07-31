@@ -1,0 +1,35 @@
+---
+- name: Ensure /etc/systemd/system/gitlab-runner.service.d/ exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/gitlab-runner.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Add reload command to GitLab Runner system service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/gitlab-runner.service.d/exec-reload.conf
+    content: |
+      [Service]
+      ExecReload=/bin/kill -HUP $MAINPID
+    mode: '0644'
+  register: gitlab_runner_exec_reload
+
+- name: Configure graceful stop for GitLab Runner system service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/gitlab-runner.service.d/kill.conf
+    content: |
+      [Service]
+      TimeoutStopSec={{ gitlab_runner_timeout_stop_seconds }}
+      KillSignal=SIGQUIT
+    mode: '0644'
+  when: gitlab_runner_timeout_stop_seconds > 0
+  register: gitlab_runner_kill_timeout
+
+- name: Force systemd to reread configs
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: true
+    name: "{{ gitlab_runner_service }}"
+  when: gitlab_runner_exec_reload.changed or gitlab_runner_kill_timeout
