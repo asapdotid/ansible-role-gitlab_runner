@@ -39,14 +39,14 @@
 - name: Set systemd reload options
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/setup/setup-reload.yml"
 
-# - name: (Debian/Ubuntu) {{ (gitlab_runner_setup == 'uninstall') | ternary('Unpin', 'Pin') }} Gitlab Runner
-#   ansible.builtin.blockinfile:
-#     path: /etc/apt/preferences.d/pin-gitlab-runner.pref
-#     create: true
-#     block: |
-#       Explanation: Prefer GitLab provided packages over the Debian native ones
-#       Package: gitlab-runner
-#       Pin: origin packages.gitlab.com
-#       Pin-Priority: 1001
-#     mode: '0644'
-#     state: "{{ (gitlab_runner_setup == 'uninstall') | ternary('absent', 'present') }}"
+- name: (Debian/Ubuntu) {{ (gitlab_runner_state == 'absent') | ternary('Unpin', 'Pin') }} Gitlab Runner
+  ansible.builtin.blockinfile:
+    path: /etc/apt/preferences.d/pin-gitlab-runner.pref
+    block: |
+      Explanation: Prefer GitLab provided packages over the Debian native ones
+      Package: gitlab-runner
+      Pin: origin packages.gitlab.com
+      Pin-Priority: 1001
+    create: true
+    mode: '0644'
+    state: "{{ gitlab_runner_state }}"
