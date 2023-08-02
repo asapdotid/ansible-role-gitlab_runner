@@ -12,5 +12,5 @@
   changed_when: runner_register_output.rc != 0
   when:
     - gitlab_runner.name not in registered_gitlab_runner_names
-  # no_log: true
+  no_log: true
   tags: runner_setup_config
