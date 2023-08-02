@@ -1,0 +1,10 @@
+---
+- name: Setup line section config
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/config/line-config-runner.yml"
+  vars:
+    line_name_prefix: "{{ sect_name_prefix }} line:[{{ (line_index | int) + 1 }}/{{ gitlab_runner.extra_configs[section] | list | length > 0 }}]: "
+  loop: "{{ gitlab_runner.extra_configs[section] | list }}"
+  loop_control:
+    loop_var: line
+    index_var: line_index
+  tags: runner_runners_config

@@ -3,7 +3,7 @@
   ansible.builtin.command:
     cmd: "{{ gitlab_runner_service }} list"
   register: gitlab_runner_get_registration_status
-  changed_when: no
+  changed_when: false
   tags: runner_runners_config
 
 - name: Create temporary file for {{ conf_name_prefix }}
@@ -32,6 +32,19 @@
   when:
     - ('name = "' + gitlab_runner.name + '"') in runner_config
     - gitlab_runner.state | default('present') == 'present'
+  loop: "{{ gitlab_runner_runners }}"
+  loop_control:
+    index_var: gitlab_runner_index
+    loop_var: gitlab_runner
+  tags: runner_runners_config
+
+- name: Remove runner config {{ conf_name_prefix }}
+  ansible.builtin.file:
+    path: "{{ temp_runner_config.path }}"
+    state: absent
+  when:
+    - ('name = "'+ gitlab_runner.name +'"') in runner_config
+    - gitlab_runner.state | default('present')  == 'absent'
   loop: "{{ gitlab_runner_runners }}"
   loop_control:
     index_var: gitlab_runner_index

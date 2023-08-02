@@ -2,8 +2,6 @@
 - name: The global section runner config
   when:
     - runner_config_file.stat.exists | bool
-  notify:
-    - (Handler) Run Runner
   tags: runner_global_config
   block:
     - name: Set concurrent option
