@@ -1,6 +1,5 @@
 ---
 - name: Unregister runner when config has changed
-  # ansible.builtin.command: '{{ gitlab_runner_service }} unregister --name "{{ gitlab_runner.name }}"'
   ansible.builtin.command:
     cmd: >
       {{ gitlab_runner_service }} unregister
@@ -11,5 +10,5 @@
   changed_when: runner_unregister_output.rc != 0
   when:
     - gitlab_runner.name in registered_gitlab_runner_names
-  # no_log: true
+  no_log: true
   tags: runner_setup_config
