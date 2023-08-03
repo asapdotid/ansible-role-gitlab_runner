@@ -82,29 +82,96 @@ Inside `vars/main.yml`
 
 ```yaml
 gitlab_runner_runners:
-  - name: "Example Docker GitLab Runner"
-    # GitLab runner token
-    token: "abcd"
+  # Using docker executor
+  - name: Gitlab-Runner Docker
+    state: present
+    token: "{{ vault_gitlab_runner_docker_token }}"
     # url is an optional override to the global gitlab_runner_coordinator_url
-    url: "https://gitlab.com"
+    url: https://gitlab.com
     executor: docker
-    docker_image: "alpine"
-    tags:
-      - node
-      - ruby
-      - mysql
+    docker_image: alpine
     docker_volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/cache"
-    docker_services:
-      - name: "redis:2.8"
-        alias: "cache"
     extra_configs:
       runners.docker:
         memory: 512m
-        allowed_images: ["ruby:*", "python:*", "php:*"]
+        allowed_images:
+          - node:*
+          - alpine:*
+          - asapdotid/node-alpine:*
+          - asapdotid/ansible-alpine:*
       runners.docker.sysctls:
         net.ipv4.ip_forward: "1"
+    cache_type: s3
+    cache_path: app-cache
+    cache_shared: false
+    cache_s3_server_address: "{{ __minio_host }}:{{ __minio_port }}"
+    cache_s3_access_key: "{{ __minio_root_user }}"
+    cache_s3_secret_key: "{{ __minio_root_password }}"
+    cache_s3_bucket_name: "{{ __minio_default_bucket }}"
+    cache_s3_insecure: true
+    # Using shell executor
+  - name: Gitlab-Runner Shell
+    state: present
+    token: "{{ vault_gitlab_runner_shell_token }}"
+    # url is an optional override to the global gitlab_runner_coordinator_url
+    url: https://gitlab.com
+    executor: shell
+```
+
+### Autoscale setup on AWS
+
+how `vars/main.yml` would look like, if you setup an autoscaling GitLab-Runner on AWS:
+
+```yaml
+gitlab_runner_runners:
+  - name: "Example autoscaling GitLab Runner"
+    state: present
+    # token is an optional override to the global gitlab_runner_registration_token
+    token: "{{ vault_gitlab_runner_docker_machine_token }}"
+    executor: "docker+machine"
+    docker_image: "alpine"
+    # Indicates whether this runner can pick jobs without tags.
+    run_untagged: true
+    extra_configs:
+      runners.machine:
+        IdleCount: 1
+        IdleTime: 1800
+        MaxBuilds: 10
+        MachineDriver: "amazonec2"
+        MachineName: "git-runner-%s"
+        MachineOptions:
+          [
+            "amazonec2-access-key={{ lookup('env','AWS_IAM_ACCESS_KEY') }}",
+            "amazonec2-secret-key={{ lookup('env','AWS_IAM_SECRET_KEY') }}",
+            "amazonec2-zone={{ lookup('env','AWS_EC2_ZONE') }}",
+            "amazonec2-region={{ lookup('env','AWS_EC2_REGION') }}",
+            "amazonec2-vpc-id={{ lookup('env','AWS_VPC_ID') }}",
+            "amazonec2-subnet-id={{ lookup('env','AWS_SUBNET_ID') }}",
+            "amazonec2-use-private-address=true",
+            "amazonec2-tags=gitlab-runner",
+            "amazonec2-security-group={{ lookup('env','AWS_EC2_SECURITY_GROUP') }}",
+            "amazonec2-instance-type={{ lookup('env','AWS_EC2_INSTANCE_TYPE') }}",
+          ]
+```
+
+#### NOTE
+
+from https://docs.gitlab.com/runner/executors/docker_machine.html:
+
+> The **first time** you’re using Docker Machine, it’s best to execute **manually** `docker-machine create...` with your chosen driver and **all options from the MachineOptions** section. This will set up the Docker Machine environment properly and will also be a good validation of the specified options. After this, you _can destroy the machine_ with `docker-machine rm [machine_name]` and start the Runner.
+
+Example:
+
+```bash
+docker-machine create -d amazonec2 --amazonec2-zone=a --amazonec2-region=us-east-1 --amazonec2-vpc-id=vpc-11111111 --amazonec2-subnet-id=subnet-1111111 --amazonec2-use-private-address=true --amazonec2-tags=gitlab-runner --amazonec2-instance-type=t3.medium test
+```
+
+Remove docker machine:
+
+```bash
+docker-machine rm test
 ```
 
 ## Dependencies
