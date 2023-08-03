@@ -1,38 +1,122 @@
-Role Name
-=========
+<p align="center"> <img src="https://user-images.githubusercontent.com/34257858/129839002-15e3f2c7-3f75-46d4-afae-0fd207d7fdde.png" width="100" height="100"></p>
 
-A brief description of the role goes here.
+<h1 align="center">
+    Role GitLab Runner
+</h1>
 
-Requirements
-------------
+<p align="center" style="font-size: 1.2rem;">
+    This ansible role install and configure GitLab Runner packages On Ubuntu, CentOS.
+</p>
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+> GitLab 16.0 and later
 
-Role Variables
---------------
+This role will install the [official GitLab Runner](https://gitlab.com/gitlab-org/gitlab-runner)
+(custom and inspire from [riemers](https://github.com/riemers/ansible-gitlab-runner)) with updates. Needed something simple and working, this did the trick for me.
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+### Runner authentication tokens (also called runner tokens)
 
-Dependencies
-------------
+In `GitLab 16.0 and later`, you can use an authentication token to register runners instead of a registration token. Runner registration tokens have been deprecated.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+To generate an authentication token, you create a runner in the GitLab UI and use the authentication token instead of the registration token.
 
-Example Playbook
-----------------
+| Process                         | Registration command                                                                                      |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Registration token (deprecated) | gitlab-runner register --registration-token `$RUNNER_REGISTRATION_TOKEN` _runner configuration arguments_ |
+| Authentication token            | gitlab-runner register --token `$RUNNER_AUTHENTICATION_TOKEN`                                             |
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+[Read Doc](https://docs.gitlab.com/ee/security/token_overview.html)
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## Requirements
 
-License
--------
+This role requires Ansible 2.7 or higher.
 
-BSD
+## Role Variables
 
-Author Information
-------------------
+| Name                            | Default Value           | Description                                                                       |
+| ------------------------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| `gitlab_runner_setup`           | `install`               | Specify whether you want to install Gitlab Runner `install`/`upgrade`/`uninstall` |
+| `gitlab_runner_version`         | `"16.1.0"`              | The version of the GitLab runner to install                                       |
+| `gitlab_runner_coordinator_url` | `"https://gitlab.com/"` | The URL to register the runner                                                    |
+| `gitlab_runner_runners`         | `[]`                    | A list of runners to register and configure                                       |
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+See the [`defaults/main.yml`](https://github.com/asapdotid/ansible-role-gitlab_runner/blob/master/defaults/main.yml) file listing all possible options which you can be passed to a runner registration command.
+
+### Gitlab Runners cache
+
+For each gitlab runner in gitlab_runner_runners you can set cache options. At the moment role support s3, azure and gcs types.
+Example configurration for s3 can be:
+
+```yaml
+gitlab_runner:
+  cache_type: "s3"
+  cache_path: "cache"
+  cache_shared: true
+  cache_s3_server_address: "s3.amazonaws.com"
+  cache_s3_access_key: "<access_key>"
+  cache_s3_secret_key: "<secret_key>"
+  cache_s3_bucket_name: "<bucket_name>"
+  cache_s3_bucket_location: "eu-west-1"
+  cache_s3_insecure: false
+```
+
+### Read Sources
+
+For details follow these links:
+
+- [gitlab-docs/runner: advanced configuration: runners.machine section](https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachine-section)
+- [gitlab-docs/runner: autoscale: supported cloud-providers](https://docs.gitlab.com/runner/configuration/autoscale.html#supported-cloud-providers)
+- [gitlab-docs/runner: autoscale_aws: runners.machine section](https://docs.gitlab.com/runner/configuration/runner_autoscale_aws/#the-runnersmachine-section)
+
+## Example Playbook
+
+```yaml
+- hosts: all
+  become: true
+  vars_files:
+    - vars/main.yml
+  roles:
+    - { role: asapdotid.gitlab_runner }
+```
+
+Inside `vars/main.yml`
+
+```yaml
+gitlab_runner_runners:
+  - name: "Example Docker GitLab Runner"
+    # GitLab runner token
+    token: "abcd"
+    # url is an optional override to the global gitlab_runner_coordinator_url
+    url: "https://gitlab.com"
+    executor: docker
+    docker_image: "alpine"
+    tags:
+      - node
+      - ruby
+      - mysql
+    docker_volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/cache"
+    docker_services:
+      - name: "redis:2.8"
+        alias: "cache"
+    extra_configs:
+      runners.docker:
+        memory: 512m
+        allowed_images: ["ruby:*", "python:*", "php:*"]
+      runners.docker.sysctls:
+        net.ipv4.ip_forward: "1"
+```
+
+## Dependencies
+
+--
+
+## License
+
+Apache License V2
+
+## Author Information
+
+[JogjaScript](https://jogjascript.com)
+
+This role was created in 2023 by [Asapdotid](https://github.com/asapdotid).
