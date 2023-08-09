@@ -1,9 +1,16 @@
 ---
+- name: Validate distribution and role variables
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate/validate.yml"
+  tags: runner_validate
+
 - name: Install dependencies
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/prerequisites/install-dependencies.yml"
+  when: gitlab_runner_state != 'absent'
+  tags: runner_prerequisites
 
 - name: Install GitLab Runner
   ansible.builtin.include_tasks: "{{ role_path }}/tasks/install/install-{{ ansible_facts['os_family'] | lower }}.yml"
+  tags: runner_install
 
 - name: Configure GitLab Runner
   when:
