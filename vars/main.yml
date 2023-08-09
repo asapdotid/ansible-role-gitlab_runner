@@ -6,22 +6,22 @@ gitlab_runner_supported_distributions:
   almalinux:
     name: AlmaLinux
     versions: [8, 9]
-    architectures: [x86_64, aarch64]
-  centos:
-    name: CentOS
-    versions: [7]
-    architectures: [x86_64]
+    architectures: [x86_64, amd64, arm64]
   debian:
     name: Debian
-    versions: [10, 11]
+    versions: [10, 11, 12]
     architectures: [x86_64, amd64, arm64]
   redhat:
     name: Red Hat Enterprise Linux
     versions: [8, 9]
-    architectures: ['x86_64', 'arm64']
+    architectures: [x86_64, amd64, arm64]
+  rocky:
+    name: Rocky Linux
+    versions: [8, 9]
+    architectures: [x86_64, amd64, arm64]
   ubuntu:
     name: Ubuntu
-    versions: [18.04, 20.04, 22.04]
+    versions: [20.04, 22.04]
     architectures: [x86_64, amd64, arm64]
 
 # Set the gitlab_runner platforms check
@@ -51,6 +51,7 @@ _gitlab_runner_repository_file:
   RedHat: /etc/yum.repos.d/runner_gitlab-runner.repo
 
 gitlab_runner_repository_file: "{{ _gitlab_runner_repository_file[ansible_os_family] }}"
+gitlab_runner_tmp_installation_script_file: /tmp/gitlab-runner.script.sh
 
 gitlab_runner_service: gitlab-runner
 
@@ -77,17 +78,8 @@ _gitlab_runner_requirements:
     - git
     - openssl
   RedHat:
-    "7":
-      - curl
-      - yum-utils
-      - openssl
-    "8":
-      - curl
-      - yum-utils
-      - openssl
-    "9":
-      - curl-minimal
-      - yum-utils
-      - openssl
+    - curl
+    - yum-utils
+    - openssl
 
-gitlab_runner_requirements: "{{ _gitlab_runner_requirements[ansible_os_family][ansible_distribution_major_version] | default(_gitlab_runner_requirements[ansible_os_family]) }}"
+gitlab_runner_requirements: "{{ _gitlab_runner_requirements[ansible_os_family] }}"
