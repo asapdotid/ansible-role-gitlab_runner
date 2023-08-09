@@ -1,0 +1,7 @@
+---
+- name: Get repository installation Gitlab Runner script
+  ansible.builtin.get_url:
+    url: "{{ gitlab_runner_script_url }}"
+    dest: "{{ gitlab_runner_tmp_installation_script_file }}"
+    mode: '0750'
+  tags: runner_install
