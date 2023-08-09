@@ -1,5 +1,33 @@
 ---
 # vars file for role-gitlab_runner
+# Supported GitLab Runner OS distributions
+# https://docs.gitlab.com/ee/administration/package_information/supported_os.html
+gitlab_runner_supported_distributions:
+  almalinux:
+    name: AlmaLinux
+    versions: [8, 9]
+    architectures: [x86_64, aarch64]
+  centos:
+    name: CentOS
+    versions: [7]
+    architectures: [x86_64]
+  debian:
+    name: Debian
+    versions: [10, 11]
+    architectures: [x86_64, amd64, arm64]
+  redhat:
+    name: Red Hat Enterprise Linux
+    versions: [8, 9]
+    architectures: ['x86_64', 'arm64']
+  ubuntu:
+    name: Ubuntu
+    versions: [18.04, 20.04, 22.04]
+    architectures: [x86_64, amd64, arm64]
+
+# Set the gitlab_runner platforms check
+gitlab_runner_distributions: "{{ gitlab_runner_supported_distributions }}"
+
+gitlab_runner_setup_vars: [install, uninstall, upgrade]
 
 # Determine the current value of 'gitlab_runner_state'
 gitlab_runner_state_vals:
