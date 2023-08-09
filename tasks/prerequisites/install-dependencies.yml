@@ -3,3 +3,4 @@
   ansible.builtin.package:
     name: "{{ gitlab_runner_requirements }}"
     state: present
+  tags: runner_prerequisites
