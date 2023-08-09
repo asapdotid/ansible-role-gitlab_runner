@@ -1,0 +1,24 @@
+---
+- name: Setup GitLab Runner repository
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/install/setup-runner-script.yml"
+  tags: runner_install
+
+- name: (RedHat/CentOS/Almalinux/Rocky) Install Gitlab repository
+  ansible.builtin.command:
+    cmd: >
+      {% if (ansible_facts['distribution'] | lower) == "rocky" %}
+      env os=el dist={{ ansible_facts['distribution_major_version'] }}
+      {% endif %}
+      bash {{ gitlab_runner_tmp_installation_script_file }}
+    creates: "{{ gitlab_runner_repository_file }}"
+  tags: runner_install
+
+- name: (RedHat/CentOS/Almalinux/Rocky) Install Gitlab Runner
+  ansible.builtin.yum:
+    name: "{{ gitlab_runner_package }}"
+    state: "{{ gitlab_runner_state }}"
+  tags: runner_install
+
+- name: Set systemd reload options
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/setup/setup-reload.yml"
+  tags: runner_install
