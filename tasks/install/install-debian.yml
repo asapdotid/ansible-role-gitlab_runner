@@ -1,14 +1,11 @@
 ---
-- name: (Debian/Ubuntu) Get repository installation Gitlab Runner script
-  ansible.builtin.get_url:
-    url: "{{ gitlab_runner_script_url }}"
-    dest: /tmp/gitlab-runner-script.sh
-    mode: '0750'
+- name: Setup GitLab Runner repository
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/install/setup-runner-script.yml"
   tags: runner_install
 
 - name: (Debian/Ubuntu) Run repository installation Gitlab Runner script
   ansible.builtin.command:
-    cmd: /tmp/gitlab-runner-script.sh
+    cmd: "{{ gitlab_runner_tmp_installation_script_file }}"
     creates: "{{ gitlab_runner_repository_file }}"
   tags: runner_install
 
