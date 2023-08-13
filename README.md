@@ -5,17 +5,17 @@
 </h1>
 
 <p align="center" style="font-size: 1.2rem;">
-    This ansible role install and configure GitLab Runner packages On Ubuntu, CentOS.
+    This ansible role install and configure GitLab Runner packages On AlmaLinux, Debian, RedHat and Rocky Linux.
 </p>
 
 > GitLab 16.0 and later
 
-This role will install the [official GitLab Runner](https://gitlab.com/gitlab-org/gitlab-runner)
-(custom and inspire from [riemers](https://github.com/riemers/ansible-gitlab-runner)) with updates. Needed something simple and working, this did the trick for me.
+This role will install the [official GitLab Runner](https://gitlab.com/gitlab-org/gitlab-runner).
+(Custom and inspire from [riemers](https://github.com/riemers/ansible-gitlab-runner)) with updates. Needed something simple and working, this did the trick for me.
 
 ### Runner authentication tokens (also called runner tokens)
 
-In `GitLab 16.0 and later`, you can use an authentication token to register runners instead of a registration token. Runner registration tokens have been deprecated.
+> In `GitLab 16.0 and later`, you can use an authentication token to register runners instead of a registration token. _Runner registration tokens have been deprecated_.
 
 To generate an authentication token, you create a runner in the GitLab UI and use the authentication token instead of the registration token.
 
